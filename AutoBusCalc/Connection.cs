@@ -20,9 +20,7 @@ namespace AutoBusCalc
             time = timespend;
             cost = moneyspend;
         }
-        public void print()
-        {
+        public void print() =>
             Console.WriteLine($"From '{StationA}' to '{StationB}' for {time} minutes for {cost} rub");
-        }
     }
 }

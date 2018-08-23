@@ -23,9 +23,7 @@ namespace AutoBusCalc
         public void print()
         {
             for (int i = 0; i < Length; i++)
-            {
                 Console.Write($"{data[i].Number} ");
-            }
         }
         public void printRev()
         {
@@ -43,28 +41,15 @@ namespace AutoBusCalc
                 data[index] = value;
             }
         }
-        internal void setArr(Point[] data)
-        {
-            this.data = data;
-        }
-        public Path getPathWithNoLastTwo()
-        {
-            Path rezult = new Path();
-            return rezult;
-        }
+        internal void setArr(Point[] data) => this.data = data;
+
         public void DeleteConnection(int i)
         {
-
             buf1 = data[1 + i].Number; buf2 = data[0 + i].Number;
-            //Console.WriteLine($"Deleting w[{buf1+1},{buf2+1}]");
             buf3 = (int)Program.w[buf1, buf2];
             Program.w[buf1, buf2] = Double.PositiveInfinity;
         }
-        public void RestoreConnection()
-        {
-            Program.w[buf1, buf2] = buf3;
-            //Console.WriteLine($"Restoring w[{buf1 + 1},{buf2 + 1}] = {buf3}");
-        }
+        public void RestoreConnection() => Program.w[buf1, buf2] = buf3;
         public bool equal(Path b)
         {
             int i = 0;
@@ -74,9 +59,9 @@ namespace AutoBusCalc
                 if (i == this.Length) return true;
             }
             return false;
-        }
-        
+        }        
     }
+
     class Point
     {
         public int Number;

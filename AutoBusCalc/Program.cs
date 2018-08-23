@@ -21,7 +21,7 @@ namespace AutoBusCalc
         static public double[,] w;
         static double infinite = Double.PositiveInfinity;
         static double[] ways;
-        static Path[] Paths = new Path[20];
+        static Path[] Paths;
         static int counter = 0; //счетчик путей
         static DateTime startingtime;
         static public Station getNextStation(Station from, Bus bus, out int minutes)
@@ -36,46 +36,66 @@ namespace AutoBusCalc
 
         static void printInfo()
         {
-            foreach (Bus a in Busses)
-            {
-                a.print();
-                a.printConnections();
-            }
-            foreach (Station a in Stations)
-            {
-                a.print();
-            }
-            foreach (Station a in GetStationsByBus(getBusByName(2)))
-            {
-                Console.WriteLine($"station for {getBusByName(2).Name}: {a.num}");
-            }
-            for (int i = 1; i <= StationCount; i++)
-            {
-                Console.WriteLine($"Busses on station {getStationByNum(i).num}:");
-                getStationByNum(i).printBusses();
-                Console.WriteLine();
-            }
-            foreach (Station a in Stations)
-                foreach (Station b in a.nextStations)
-                    Console.WriteLine($"{a.num} next possible station: {b.num}");
-            //Console.WriteLine($"Path 6: {paths[6-1].Num} {paths[6-1].way}");
-            foreach(Connection a in allConnections)
-            {
-                a.print();
-            }
+            foreach (Bus a in Busses) a.print();
+            foreach (Station a in Stations) a.print();
+            foreach (Connection a in allConnections) a.print();
             PrintMatrica();
+        }
+        static void test()
+        {
+            Console.WriteLine("[test] Enter starting time in format 00:00");
+            string input = Console.ReadLine();
+            if ((input.Length == 5) && (input[2].Equals(':')))
+            {
+                string[] enteredtime = input.Split(':');
+                startingtime = DateTime.Today;
+                int rezlt = 0;
+                if (Int32.TryParse(enteredtime[0], out rezlt))
+                {
+                    startingtime = startingtime.AddHours(rezlt);
+                    if (Int32.TryParse(enteredtime[1], out rezlt))
+                    {
+                        startingtime = startingtime.AddMinutes(rezlt);
+                        for (int i = 1; i <= StationCount; i++)
+                        {
+                            Console.WriteLine($"Checking from {i} to others");
+                            for (int j = 1; j <= StationCount; j++)
+                            {
+                                if (j % 10 == 0) Console.ReadKey();
+                                if (i != j)
+                                {
+                                    Console.WriteLine("/͞͞͞͞͞͞͞͞͞͞͞͞͞͞͞͞͞͞͞͞͞͞͞͞͞͞͞͞͞͞͞͞͞͞͞͞͞͞͞͞͞͞͞\\");
+                                    Console.WriteLine($"Checking {i} and {j}");
+                                    ways = new double[StationCount];
+                                    Paths = new Path[50];
+                                    for (int k = 0; k < N; k++) Paths[k] = new Path();
+                                    counter = 0;
+                                    CalcAllPaths(i, j);
+                                    Console.WriteLine("\\͟͟͟͟͟͟͟͟͟͟͟͟͟͟͟͟͟͟͟͟͟͟͟͟͟͟͟͟͟͟͟͟͟͟͟͟͟͟͟͟͟͟͟/");
+                                }
+                            }
+                        }
+                    }
+                    else Console.WriteLine("Wrong minutes entered.");
+                }
+                else Console.WriteLine("Wrong hours entered.");
+            }
+            else Console.WriteLine("Wrong starting time entered");
+            Console.ReadLine();
         }
         
 
         static void Initialize()
         {
-            readMarshrutes(@"E:\Marshrut2.txt");
+            Console.OutputEncoding = System.Text.Encoding.UTF8;
+            Console.WriteLine(@"Enter input file in format C:\folder\file.txt");
+            string filepath = Console.ReadLine();
+            readMarshrutes(@filepath);
             for (int i = 1; i <= Station.stationcount; i++) Stations.Add(new Station(i));
             ways = new double[StationCount];
-            Paths = new Path[20];
+            Paths = new Path[50];
             for (int i = 0; i < N; i++) Paths[i] = new Path();
             ConvertConnsToArr();
-            
         }
         static void ConvertConnsToArr()
         {
@@ -101,77 +121,60 @@ namespace AutoBusCalc
         static void Main(string[] args)
         {
             Initialize();
-            printInfo();
-            Console.WriteLine("Enter starting time if format 00:00 ");
-            string[] enteredtime = Console.ReadLine().Split(':');
-            startingtime = DateTime.Today;
-            startingtime = startingtime.AddHours(Convert.ToInt32(enteredtime[0]));
-            startingtime = startingtime.AddMinutes(Convert.ToInt32(enteredtime[1]));
-            Console.WriteLine("Enter start point, finish point:");
-            Station start = getStationByNum(Convert.ToInt32(Console.ReadLine()));
-            Station finish = getStationByNum(Convert.ToInt32(Console.ReadLine()));
-            dixtra(start.num);
-            CalcPath(start.num, finish.num);
-            for (int i = 0; i <= Paths[0].Length - 2; i++)
-            {
-                Paths[0].DeleteConnection(i);
-                dixtra(start.num);
-                CalcPath(start.num, finish.num);
-                Paths[0].RestoreConnection();
-            }
-            getCheapestPath();
-            getFastestPath(start.num,finish.num);
+            //printInfo(); //для вывода входных данных
             
-            Console.ReadLine();
+            Console.WriteLine("Enter starting time in format 00:00 or 'test'");
+            string input = Console.ReadLine();
+            if (input == "test") test();
+            else
+            {
+                if ((input.Length == 5) && (input[2].Equals(':')))
+                {
+                    string[] enteredtime = input.Split(':');
+                    startingtime = DateTime.Today;
+                    bool succes = false;
+                    int rezlt = 0;
+                    if (Int32.TryParse(enteredtime[0], out rezlt))
+                    {
+                        startingtime = startingtime.AddHours(rezlt);
+                        if (Int32.TryParse(enteredtime[1], out rezlt))
+                        {
+                            startingtime = startingtime.AddMinutes(rezlt);
+                            Console.WriteLine($"Enter start and finish point in format: 1..{StationCount}");
+                            int start = 0;
+                            int finish = 0;
+                            bool first = (Int32.TryParse((Console.ReadLine()), out start) && start <= StationCount) && start > 0;
+                            bool second = (Int32.TryParse(Console.ReadLine(), out finish) && finish <= StationCount) && finish > 0;
+                            if (first && second)
+                                CalcAllPaths(start, finish);
+                            else Console.WriteLine("Wrong start/finish entered");
+                        }
+                        else Console.WriteLine("Wrong minutes entered.");
+                    }
+                    else Console.WriteLine("Wrong hours entered.");
+                }
+                else
+                {
+                    Console.WriteLine("Wrong starting time entered.");
+                }
+                Console.ReadLine();
+            }            
         }
-        
-        class MyTime:ICloneable
+
+        static void CalcAllPaths(int start, int finish)
         {
-            public int hour;
-            public int minute;
-            public int gettotal()
-            {
-                return this.hour * 60 + this.minute;
-            }
-            public string getString()
-            {                
-                return $"{hour}:{minute}";
-            }
-            public MyTime addMinutes(int mins)
-            {
-                int totalminutes = hour * 60 + minute+mins;
-                return new MyTime() { hour = totalminutes/60, minute = totalminutes%60 };
-            }
-            public object Clone()
-            {
-                return new MyTime { hour = this.hour, minute = this.minute };
-            }
-            public static MyTime operator -(MyTime c1, MyTime c2)
-            {
-                int a = c1.hour * 60 + c1.minute;
-                int b = c2.hour * 60 + c2.minute;                
-                return new MyTime { hour = (a-b)/60, minute = (a-b)%60 };
-            }
-            public static bool operator >=(MyTime c1, MyTime c2)
-            {
-                int t1 = c1.hour * 60 + c1.minute;
-                int t2 = c2.hour * 60 + c2.minute;
-                if (t1 <= t2) return true;
-                return false;
-            }
-            public static bool operator <=(MyTime c1, MyTime c2)
-            {
-                int t1 = c1.hour * 60 + c1.minute;
-                int t2 = c2.hour * 60 + c2.minute;
-                if (t1 <= t2) return true;
-                return false;
-            }
-            public static MyTime operator +(MyTime c1, MyTime c2)
-            {
-                int a = c1.hour * 60 + c1.minute;
-                int b = c2.hour * 60 + c2.minute;
-                return new MyTime { hour = (a + b) / 60, minute = (a + b) % 60 };
-            }
+            dixtra(start);
+            CalcPath(start, finish);
+            //for (int j = 0; j < counter; j++)//с этим уходит в бесконечный цикл иногда
+                for (int i = 0; i <= Paths[0].Length - 2; i++)
+                {
+                    Paths[0].DeleteConnection(i);
+                    dixtra(start);
+                    CalcPath(start, finish);
+                    Paths[0].RestoreConnection();
+                }
+            getCheapestPath();
+            getFastestPath();
         }
 
         static MyTime getPathTime(Path input)
@@ -180,10 +183,11 @@ namespace AutoBusCalc
             int first = input[input.Length - 1].Number;//получили id первой станции
             int second = input[input.Length - 2].Number;//получили id второй станции
             int minutes;
-            Bus between = getBusBetwenTwo(first, second, out minutes);//первый автобус, который нужен            
+            Bus between = getBusBetwenTwo(first, second, out minutes);//первый автобус, который нужен    
             MyTime now = new MyTime() { hour = startingtime.Hour, minute = startingtime.Minute };
             waitingforbus(getStationByNum(first + 1), between, start, out now);
-            now.addMinutes(minutes);
+            //Console.WriteLine($" time betwen {first+1} and {second+1} = {minutes}");
+            now = now.addMinutes(minutes);
             //Console.WriteLine($"Transfer from {first+1} to {second+1} is done");
             Bus previous = between;
             for (int i = input.Length-2; i>=1; i--)
@@ -222,6 +226,7 @@ namespace AutoBusCalc
                 //rezult = now;
                 while (true)
                 {
+                    //Console.WriteLine("waitingfrobus");
                     int minutes = 0;
                     temp = getNextStation(temp, targetbus, out minutes);
                     rezult = rezult.addMinutes(minutes);
@@ -235,6 +240,7 @@ namespace AutoBusCalc
                 {
                     while (true)
                     {
+                        //Console.WriteLine("waitingfrobus else");
                         int minutes = 0;
                         temp = getNextStation(temp, targetbus, out minutes);
                         rezult = rezult.addMinutes(minutes);
@@ -246,6 +252,7 @@ namespace AutoBusCalc
                 {
                     while (true)
                     {
+                        //Console.WriteLine("waitingfrobus else else");
                         int minutes = 0;
                         temp = getNextStation(temp, targetbus, out minutes);
                         rezult = rezult.addMinutes(minutes);
@@ -255,39 +262,53 @@ namespace AutoBusCalc
                     }
                 }
             }
-
             //Console.WriteLine($"Wait finished, now: {rezult.getString()}");
         }
 
-        static Path getFastestPath(int start, int finish)
+        static Path getFastestPath()
         {
             Path rez = null;
             int rezid = 0;
             MyTime fromhome = new MyTime() { hour = startingtime.Hour, minute = startingtime.Minute };
-            MyTime rezrezult = null;
-            for (int j = 0; j < counter; j++)
+            MyTime rezrezult = getPathTime(Paths[0]);
+            Console.WriteLine("[   ]");
+            if (counter == 1)
             {
-                if (rez == null) rez = Paths[j];
-                Console.WriteLine($"Checking {j+1}");
-                MyTime pathrezult = getPathTime(Paths[j]);
-                rezrezult = getPathTime(rez);
-                Console.WriteLine($"[Path] {j + 1} rezult: {pathrezult.getString()}");
-                
-                int first = Paths[j][Paths[j].Length - 1].Number;
-                int second = Paths[j][Paths[j].Length - 2].Number;
-                
-                Bus pathstartBus = getBusBetwenTwo(first, second);
-                MyTime startbusstart = new MyTime() { hour = pathstartBus.start.Hour, minute = pathstartBus.start.Minute };
-                //Console.WriteLine($"Two first statioms on [Path] {j + 1}: {first + 1} and {second + 1}, Bus: {pathstartBus.Name}, Busstart: {pathstartBus.start.ToString()}");
-                Console.WriteLine($"Wasted time for [Path] {j + 1} = {(pathrezult - fromhome).getString()}");
-                if (pathrezult <= rezrezult) { rez = Paths[j]; rezid = j; }
+                rez = Paths[0];
+                MyTime pathrezult = rezrezult;
+                if (pathrezult.gettotal() >= 24 * 60) Console.WriteLine($"[!] There are only one path from {rez[rez.Length - 1].Number+1} to {rez[0].Number+1} and it is too late. Wasted time: {(rezrezult - fromhome).getString()}. Way complete at {rezrezult.getString()}");
+                else
+                Console.WriteLine($"[!] There are only one path from {rez[rez.Length-1].Number+1} to {rez[0].Number+1}, wasted time: {(rezrezult - fromhome).getString()}. Way complete at {rezrezult.getString()}");
+                Paths[rezid].printRev();
             }
-            
-            Console.WriteLine($"The fastest path is {rezid+1}, wasted time: {(rezrezult-fromhome).getString()}");
-            Paths[rezid].printRev();
+            else
+            {
+                for (int j = 0; j < counter; j++)
+                {
+                    if (rez == null) rez = Paths[j];
+                    //Console.WriteLine($" [ ] Checking {j + 1}");
+                    MyTime pathrezult = getPathTime(Paths[j]);
+                    if (pathrezult.gettotal() >= 24 * 60) Console.WriteLine($" [ ] Too late for Path {j + 1}, wasted time: {(pathrezult - fromhome).getString()}. Way complete at {pathrezult.getString()}");
+                    else if(pathrezult!=null)
+                    {
+                        //rezrezult = getPathTime(rez);
+
+                        Console.WriteLine($" [ ] Path {j + 1} rezult: {pathrezult.getString()}");
+
+                        int first = Paths[j][Paths[j].Length - 1].Number;
+                        int second = Paths[j][Paths[j].Length - 2].Number;
+
+                        Bus pathstartBus = getBusBetwenTwo(first, second);
+                        MyTime startbusstart = new MyTime() { hour = pathstartBus.start.Hour, minute = pathstartBus.start.Minute };
+                        Console.WriteLine($" [ ] Wasted time for Path {j + 1} = {(pathrezult - fromhome).getString()}");
+                        if (pathrezult <= rezrezult) { rez = Paths[j]; rezid = j; rezrezult = pathrezult; }
+                    }
+                }
+                Console.WriteLine($"[!] The fastest path is {rezid + 1}, wasted time: {(rezrezult - fromhome).getString()}. Way complete at {rezrezult.getString()}");
+                Paths[rezid].printRev();
+            }
             return rez;
         }
-
         static int getMinutesBetweenTwo(int a, int b)
         {
             foreach (Connection tc in allConnections)
@@ -295,62 +316,14 @@ namespace AutoBusCalc
             Console.WriteLine($"Connection betwen {a} and {b} not founded!");
             return 1111;
         }
-
-        static MyTime wait(MyTime begin, int minutes)
-        {
-            MyTime rezult = begin.addMinutes(minutes);
-            return rezult;
-        }
-        static MyTime wait(MyTime from, Bus bustowait, Station stationwhere)
-        {
-            MyTime now = from; //во сколько мы оказались на остановке
-            MyTime rezult;
-            MyTime temp = (MyTime)from.Clone();
-            MyTime howmuch = new MyTime { hour = 0, minute = 0 };
-            MyTime bustime = new MyTime() { hour = bustowait.start.Hour, minute = bustowait.start.Minute }; //начало движения автобуса
-            //Console.WriteLine($"bustime start: {bustime.getString()}");
-            if (bustime <= now)
-            {
-                Station tempStation = bustowait.getFirstStation();
-                int minutes = 0;
-                int minutessum = 0;
-                while (tempStation.num != stationwhere.num && bustime <= now)
-                {
-                    tempStation = getNextStation(tempStation, bustowait, out minutes);
-                    //Console.WriteLine($"minutes: {minutes}");
-                    bustime = wait(bustime,minutes);
-                    //Console.WriteLine($"BusTime: {bustime.getString()}, Now: {now.getString()}");
-                    //minutessum += minutes;
-                    //Console.WriteLine($"The next station of {bustowait.Name} is {tempStation.num}&&&&");
-                }
-                //temp = bustime - now;
-            }
-            else
-            {
-                now = bustime;
-                Station tempStation = bustowait.getFirstStation();
-                int minutes = 0;
-                int minutessum = 0;
-                while (tempStation.num != stationwhere.num)
-                {
-                    tempStation = getNextStation(tempStation, bustowait, out minutes);
-                    //Console.WriteLine($"minutes: {minutes}");
-                    bustime = wait(bustime,minutes);
-                    //minutessum += minutes;
-                    //Console.WriteLine($"ELSE: The next station of {bustowait.Name} is {tempStation.num} we need station: {stationwhere.num} BusTime: {bustime.getString()}");
-                }
-            }
-            //Console.WriteLine($"Return value: {bustime.getString()}");
-            now = (MyTime)bustime.Clone();
-            return bustime;
-        }
-
         static Path getCheapestPath()
         {
             Path rezult = null;
             int minsum = 1000;
+            int rezid = 0;
             for (int j = 0; j < counter; j++)
             {
+                Console.WriteLine("[   ]");
                 if (rezult == null) rezult = Paths[j];
                 List<Bus> PathBusses = new List<Bus>();
                 for (int i = Paths[j].Length - 1; i >= 1; i--)
@@ -359,46 +332,42 @@ namespace AutoBusCalc
                     if (!PathBusses.Contains(busBetwen)&&(busBetwen!=null))
                         PathBusses.Add(busBetwen);
                 }
-                Console.Write($"**************************\n[Path] {j+1}: ");
+                Console.Write($" [ ] Path {j+1}: ");
                 Paths[j].printRev();
-                Console.WriteLine($"Contains {PathBusses.Count} busses: ");
+                Console.WriteLine($" [ ] Contains {PathBusses.Count} busses: ");
                 int sum = 0;
                 foreach (Bus a in PathBusses)
                 {
-                    Console.WriteLine($"{a.Name} cost: {a.cost}");
+                    Console.WriteLine($" [ ] {a.Name} cost: {a.cost}");
                     sum += a.cost;
                 }
-                if (sum < minsum) { rezult = Paths[j]; minsum = sum; }
-                Console.WriteLine($"Total cost = {sum}");
+                if (sum < minsum) { rezult = Paths[j]; minsum = sum; rezid = j; }
+                Console.WriteLine($" [ ] Total cost = {sum}");
             }
-            for (int i = 0; i < counter; i++)
-                if (Paths[i] == rezult)
-                    Console.WriteLine($"**********The cheapest path is {i+1}**********");
+            Console.WriteLine($"[!] The cheapest path is {rezid+1}\n [~] But the most cheapest way is to go for a walk");
             return rezult;
-        }
-
-        
-
+        }        
         static void CalcPath(int start, int finish)
         {
             start -= 1;
             finish -= 1;
-            Path tmp = new Path();
-            List<Point> tmpp = new List<Point>();
+            Path temppath = new Path();
+            List<Point> tempway = new List<Point>();
             Point previous = new Point(finish, null);
             for (int i = 0; i < N; i++)
                 if (ways[i] == 0 && w[start, i] != infinite) ways[i] = start; //little fix
-            tmpp.Add(previous);
+            tempway.Add(previous);
             while (finish != start)
             {
+                //Console.WriteLine($"{finish+1} {start+1}"); //сдесь уходит в бесконечность, если в test()
                 finish = (int)ways[finish];
                 previous = new Point(finish, previous);
-                tmpp.Add(previous);
+                tempway.Add(previous);
             }
-            tmp.setArr(tmpp.ToArray());
-            tmp.Length = tmpp.Count;
-            if (!In(tmp))
-                Paths[counter++] = tmp;
+            temppath.setArr(tempway.ToArray());
+            temppath.Length = tempway.Count;
+            if (!In(temppath))
+                Paths[counter++] = temppath;
         }
         static Bus getBusBetwenTwo(int stA, int stB)  //0-21 нужен
         {
@@ -410,7 +379,7 @@ namespace AutoBusCalc
             Console.WriteLine($"Cannot find connect between {stA + 1} and {stB + 1}");
             return rezult;
         }
-        static Bus getBusBetwenTwo(int stA, int stB, out int minutes)  //0-21
+        static Bus getBusBetwenTwo(int stA, int stB, out int minutes)  //0-21 нужен
         {
             Bus rezult = null;
             minutes = 0;
@@ -421,54 +390,6 @@ namespace AutoBusCalc
             Console.WriteLine($"Cannot find connect between {stA + 1} and {stB + 1}");
             return rezult;
         }
-        
-        static List<Station> GetStationsByBus(Bus a)
-        {
-            List<Station> rezult = new List<Station>();
-            foreach(Station sta in Stations)
-            {
-                if (a.stations.Contains(sta.num)) rezult.Add(sta);
-            }
-            return rezult;
-        }
-        static public List<Bus> getBussesByStation(Station a)
-        {
-            List<Bus> rezult = new List<Bus>();
-            foreach(Bus bus in Busses)
-            {
-                if (bus.stations.Contains(a.num)) rezult.Add(bus);
-            }
-            return rezult;
-        }
-        static public List<Bus> getBussesbyBus(Bus a)
-        {
-            List<Bus> rezult = new List<Bus>();
-            foreach(Station tmpa in GetStationsByBus(a))
-            {
-                foreach(Bus tmpb in getBussesByStation(tmpa))
-                {
-                    rezult.Add(tmpb);
-                }
-            }
-            List<Bus> uniq = rezult.Distinct().ToList<Bus>();
-            return uniq;
-        }
-        static public List<Bus> getBussesbyBus(int a)
-        {
-            List<Bus> rezult = new List<Bus>();
-            foreach (Station tmpa in GetStationsByBus(getBusByName(a)))
-            {
-                foreach (Bus tmpb in getBussesByStation(tmpa))
-                {
-                    rezult.Add(tmpb);
-                }
-            }
-            List<Bus> uniq = rezult.Distinct().ToList<Bus>();
-            return uniq;
-        }
-
-        
-
         public static Station getStationByNum(int n)
         {
             foreach(Station a in Stations)
@@ -477,7 +398,6 @@ namespace AutoBusCalc
             }
             return null;
         }
-
         static public Bus getBusByName(int bn)
         {
             foreach(Bus a in Busses)
@@ -486,46 +406,6 @@ namespace AutoBusCalc
             }
             return null;
         }
-
-        static void dixtra(int st)
-        {
-            st -= 1;
-            N = StationCount;
-            double[] D = new double[N];
-            bool[] visited = new bool[N];
-            for (int i = 0; i < N; i++)
-            {
-                D[i] = w[st, i];
-                visited[i] = false;
-            }
-            D[st] = infinite;
-            int index = 0, u = 0;
-            for (int i = 0; i < N; i++)
-            {
-                double min = infinite;
-                for (int j = 0; j < N; j++)
-                {
-                    if (!visited[j] && D[j] < min)
-                    {
-                        min = D[j];
-                        index = j;
-                        //Console.WriteLine($"1st cycle: min setted {min}, index setted {index} i={i}, j={j}");
-                    }
-                }
-                u = index;
-                visited[u] = true;
-                //Console.WriteLine($"Between cycles: i={i}, u setted {u}, visited[{u}] setted true");
-                for (int j = 0; j < N; j++)
-                {
-                    if (!visited[j] && w[u, j] != infinite && D[u] != infinite && (D[u] + w[u, j] < D[j]))
-                    {
-                        D[j] = D[u] + w[u, j];
-                        ways[j] = u;
-                        //Console.WriteLine($"2nd cycle: u={u}, j={j}");
-                    }
-                }
-            }
-        }
         static public bool In(Path a)
         {
             for (int i = 0; i < Paths.Length; i++)
@@ -533,7 +413,6 @@ namespace AutoBusCalc
                     if (Paths[i].equal(a)) return true;
             return false;
         }
-
         static void readMarshrutes(string path)
         {            
             using (StreamReader fs = new StreamReader(path))
@@ -580,7 +459,7 @@ namespace AutoBusCalc
                         int stB = Convert.ToInt32(values[2 + j]);
                         int time = Convert.ToInt32(values[k+1+j]);
                         Connection a = new Connection(stA, stB, time, getBusByName(i).cost);
-                        Console.WriteLine($"Connect {stA} to {stB}");
+                        //Console.WriteLine($"Connect {stA} to {stB}");
                         getBusByName(i).Connections.Add(a);
                         a.busBetwen = getBusByName(i);
                         allConnections.Add(a);
@@ -588,11 +467,46 @@ namespace AutoBusCalc
                     Connection clast = new Connection(last, first,
                             Convert.ToInt32(values[values.Length-1]), getBusByName(i).cost);
                     clast.busBetwen = getBusByName(i);
-                    Console.WriteLine($"Connect {last} to {first}");
+                    //Console.WriteLine($"Connect {last} to {first}");
                     allConnections.Add(clast);
-
                     if (!getBusByName(i).stations.Contains(last)) getBusByName(i).stations.Add(last);
                     getBusByName(i).Connections.Add(clast);
+                }
+            }
+        }
+        static void dixtra(int st)
+        {
+            st -= 1;
+            N = StationCount;
+            double[] D = new double[N];
+            bool[] visited = new bool[N];
+            for (int i = 0; i < N; i++)
+            {
+                D[i] = w[st, i];
+                visited[i] = false;
+            }
+            D[st] = infinite;
+            int index = 0, u = 0;
+            for (int i = 0; i < N; i++)
+            {
+                double min = infinite;
+                for (int j = 0; j < N; j++)
+                {
+                    if (!visited[j] && D[j] < min)
+                    {
+                        min = D[j];
+                        index = j;
+                    }
+                }
+                u = index;
+                visited[u] = true;
+                for (int j = 0; j < N; j++)
+                {
+                    if (!visited[j] && w[u, j] != infinite && D[u] != infinite && (D[u] + w[u, j] < D[j]))
+                    {
+                        D[j] = D[u] + w[u, j];
+                        ways[j] = u;
+                    }
                 }
             }
         }

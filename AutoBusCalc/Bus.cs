@@ -27,6 +27,7 @@ namespace AutoBusCalc
         {
             Console.WriteLine($"\nName: {Name} start: {start} cost: {cost}");
             Console.WriteLine(string.Join("-", stations.ToArray()));
+            printConnections();
         }
         public void printConnections()
         {

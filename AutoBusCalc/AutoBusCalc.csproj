@@ -44,6 +44,7 @@
   <ItemGroup>
     <Compile Include="Bus.cs" />
     <Compile Include="Connection.cs" />
+    <Compile Include="MyTime.cs" />
     <Compile Include="Path.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

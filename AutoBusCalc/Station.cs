@@ -34,13 +34,13 @@ namespace AutoBusCalc
         {
             return this.MemberwiseClone();
         }
-        public void fillStationBusses()
+        /*public void fillStationBusses()
         {
             foreach (int i in marshrutes)
             {
                 Busses.Add(Program.getBusByName(i));
             }
-        }
+        }*/
         public void printBusses()
         {
             foreach (Bus a in Busses)
