@@ -85,17 +85,22 @@ namespace AutoBusCalc
         }
         
 
-        static void Initialize()
+        static bool Initialize()
         {
             Console.OutputEncoding = System.Text.Encoding.UTF8;
             Console.WriteLine(@"Enter input file in format C:\folder\file.txt");
             string filepath = Console.ReadLine();
-            readMarshrutes(@filepath);
-            for (int i = 1; i <= Station.stationcount; i++) Stations.Add(new Station(i));
-            ways = new double[StationCount];
-            Paths = new Path[50];
-            for (int i = 0; i < N; i++) Paths[i] = new Path();
-            ConvertConnsToArr();
+            bool ok = readMarshrutes(@filepath);
+            if (ok)
+            {
+                for (int i = 1; i <= Station.stationcount; i++) Stations.Add(new Station(i));
+                ways = new double[StationCount];
+                Paths = new Path[50];
+                for (int i = 0; i < N; i++) Paths[i] = new Path();
+                ConvertConnsToArr();
+            }
+            else return false;
+            return true;
         }
         static void ConvertConnsToArr()
         {
@@ -120,45 +125,47 @@ namespace AutoBusCalc
         }
         static void Main(string[] args)
         {
-            Initialize();
-            //printInfo(); //для вывода входных данных
-            
-            Console.WriteLine("Enter starting time in format 00:00 or 'test'");
-            string input = Console.ReadLine();
-            if (input == "test") test();
-            else
+            if (Initialize())
             {
-                if ((input.Length == 5) && (input[2].Equals(':')))
-                {
-                    string[] enteredtime = input.Split(':');
-                    startingtime = DateTime.Today;
-                    bool succes = false;
-                    int rezlt = 0;
-                    if (Int32.TryParse(enteredtime[0], out rezlt))
-                    {
-                        startingtime = startingtime.AddHours(rezlt);
-                        if (Int32.TryParse(enteredtime[1], out rezlt))
-                        {
-                            startingtime = startingtime.AddMinutes(rezlt);
-                            Console.WriteLine($"Enter start and finish point in format: 1..{StationCount}");
-                            int start = 0;
-                            int finish = 0;
-                            bool first = (Int32.TryParse((Console.ReadLine()), out start) && start <= StationCount) && start > 0;
-                            bool second = (Int32.TryParse(Console.ReadLine(), out finish) && finish <= StationCount) && finish > 0;
-                            if (first && second)
-                                CalcAllPaths(start, finish);
-                            else Console.WriteLine("Wrong start/finish entered");
-                        }
-                        else Console.WriteLine("Wrong minutes entered.");
-                    }
-                    else Console.WriteLine("Wrong hours entered.");
-                }
+                //printInfo(); //для вывода входных данных            
+                Console.WriteLine("Enter starting time in format 00:00 or 'test'");
+                string input = Console.ReadLine();
+                if (input == "test") test();
                 else
                 {
-                    Console.WriteLine("Wrong starting time entered.");
+                    if ((input.Length == 5) && (input[2].Equals(':')))
+                    {
+                        string[] enteredtime = input.Split(':');
+                        startingtime = DateTime.Today;
+                        bool succes = false;
+                        int rezlt = 0;
+                        if (Int32.TryParse(enteredtime[0], out rezlt))
+                        {
+                            startingtime = startingtime.AddHours(rezlt);
+                            if (Int32.TryParse(enteredtime[1], out rezlt))
+                            {
+                                startingtime = startingtime.AddMinutes(rezlt);
+                                Console.WriteLine($"Enter start and finish point in format: 1..{StationCount}");
+                                int start = 0;
+                                int finish = 0;
+                                bool first = (Int32.TryParse((Console.ReadLine()), out start) && start <= StationCount) && start > 0;
+                                bool second = (Int32.TryParse(Console.ReadLine(), out finish) && finish <= StationCount) && finish > 0;
+                                if (first && second)
+                                    CalcAllPaths(start, finish);
+                                else Console.WriteLine("Wrong start/finish entered");
+                            }
+                            else Console.WriteLine("Wrong minutes entered.");
+                        }
+                        else Console.WriteLine("Wrong hours entered.");
+                    }
+                    else
+                    {
+                        Console.WriteLine("Wrong starting time entered.");
+                    }
+                    Console.ReadLine();
                 }
-                Console.ReadLine();
-            }            
+            }
+            else { Console.WriteLine("Error when openning file"); Console.ReadLine(); }
         }
 
         static void CalcAllPaths(int start, int finish)
@@ -413,66 +420,72 @@ namespace AutoBusCalc
                     if (Paths[i].equal(a)) return true;
             return false;
         }
-        static void readMarshrutes(string path)
-        {            
-            using (StreamReader fs = new StreamReader(path))
+        static bool readMarshrutes(string path)
+        {
+            bool ok = true;
+            try
             {
-                
-                BussCount = Convert.ToInt32(fs.ReadLine());
-                StationCount = Convert.ToInt32(fs.ReadLine());
-                Station.stationcount = StationCount;
-                string temp = fs.ReadLine();
-                string[] arr = temp.Split(' ');
-                foreach (string b in arr)
+                using (StreamReader fs = new StreamReader(path))
                 {
-                    Bus tempBus = new Bus(BussCounter++);
-                    string[] hourminute = b.Split(':');                    
-                    double hours = Convert.ToDouble(hourminute[0]);
-                    double minutes = Convert.ToDouble(hourminute[1]);
-                    DateTime tempDateTime = DateTime.Today;
-                    tempDateTime = tempDateTime.AddHours(hours);
-                    tempDateTime = tempDateTime.AddMinutes(minutes);
-                    tempBus.start = tempDateTime;
-                    Busses.Add(tempBus);
-                }
-                temp = fs.ReadLine();
-                string[] costs = temp.Split(' ');
-                int i = 1;
-                foreach (string a in costs)
-                {
-                    getBusByName(i++).cost = Convert.ToInt32(a);
-                }
-                i = 1;
-                for (i = 1; i <= BussCount; i++)
-                {
-                    string ways = fs.ReadLine();
-                    string[] values = ways.Split(' ');
-                    int k = Convert.ToInt32(values[0]);
-                    int n = 1;
-                    int first = Convert.ToInt32(values[1]);
-                    int last = Convert.ToInt32(values[values.Length/2]);
-                    int max = values.Length;
-                    for (int j = 0; j < k - 1; j++)
+
+                    BussCount = Convert.ToInt32(fs.ReadLine());
+                    StationCount = Convert.ToInt32(fs.ReadLine());
+                    Station.stationcount = StationCount;
+                    string temp = fs.ReadLine();
+                    string[] arr = temp.Split(' ');
+                    foreach (string b in arr)
                     {
-                        int stA = Convert.ToInt32(values[1 + j]);
-                        if (!getBusByName(i).stations.Contains(Convert.ToInt32(values[1 + j]))) getBusByName(i).stations.Add(Convert.ToInt32(values[1 + j]));                        
-                        int stB = Convert.ToInt32(values[2 + j]);
-                        int time = Convert.ToInt32(values[k+1+j]);
-                        Connection a = new Connection(stA, stB, time, getBusByName(i).cost);
-                        //Console.WriteLine($"Connect {stA} to {stB}");
-                        getBusByName(i).Connections.Add(a);
-                        a.busBetwen = getBusByName(i);
-                        allConnections.Add(a);
+                        Bus tempBus = new Bus(BussCounter++);
+                        string[] hourminute = b.Split(':');
+                        double hours = Convert.ToDouble(hourminute[0]);
+                        double minutes = Convert.ToDouble(hourminute[1]);
+                        DateTime tempDateTime = DateTime.Today;
+                        tempDateTime = tempDateTime.AddHours(hours);
+                        tempDateTime = tempDateTime.AddMinutes(minutes);
+                        tempBus.start = tempDateTime;
+                        Busses.Add(tempBus);
                     }
-                    Connection clast = new Connection(last, first,
-                            Convert.ToInt32(values[values.Length-1]), getBusByName(i).cost);
-                    clast.busBetwen = getBusByName(i);
-                    //Console.WriteLine($"Connect {last} to {first}");
-                    allConnections.Add(clast);
-                    if (!getBusByName(i).stations.Contains(last)) getBusByName(i).stations.Add(last);
-                    getBusByName(i).Connections.Add(clast);
+                    temp = fs.ReadLine();
+                    string[] costs = temp.Split(' ');
+                    int i = 1;
+                    foreach (string a in costs)
+                    {
+                        getBusByName(i++).cost = Convert.ToInt32(a);
+                    }
+                    i = 1;
+                    for (i = 1; i <= BussCount; i++)
+                    {
+                        string ways = fs.ReadLine();
+                        string[] values = ways.Split(' ');
+                        int k = Convert.ToInt32(values[0]);
+                        int n = 1;
+                        int first = Convert.ToInt32(values[1]);
+                        int last = Convert.ToInt32(values[values.Length / 2]);
+                        int max = values.Length;
+                        for (int j = 0; j < k - 1; j++)
+                        {
+                            int stA = Convert.ToInt32(values[1 + j]);
+                            if (!getBusByName(i).stations.Contains(Convert.ToInt32(values[1 + j]))) getBusByName(i).stations.Add(Convert.ToInt32(values[1 + j]));
+                            int stB = Convert.ToInt32(values[2 + j]);
+                            int time = Convert.ToInt32(values[k + 1 + j]);
+                            Connection a = new Connection(stA, stB, time, getBusByName(i).cost);
+                            //Console.WriteLine($"Connect {stA} to {stB}");
+                            getBusByName(i).Connections.Add(a);
+                            a.busBetwen = getBusByName(i);
+                            allConnections.Add(a);
+                        }
+                        Connection clast = new Connection(last, first,
+                                Convert.ToInt32(values[values.Length - 1]), getBusByName(i).cost);
+                        clast.busBetwen = getBusByName(i);
+                        //Console.WriteLine($"Connect {last} to {first}");
+                        allConnections.Add(clast);
+                        if (!getBusByName(i).stations.Contains(last)) getBusByName(i).stations.Add(last);
+                        getBusByName(i).Connections.Add(clast);
+                    }
                 }
             }
+            catch (Exception e) { ok = false; }
+            return ok;
         }
         static void dixtra(int st)
         {
