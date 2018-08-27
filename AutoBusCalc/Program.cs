@@ -16,7 +16,7 @@ namespace AutoBusCalc
         static int StationCount = 0;
         static List<Bus> Busses = new List<Bus>();
         static List<Station> Stations = new List<Station>();
-        static List<Connection> allConnections = new List<Connection>();
+        static public List<Connection> allConnections = new List<Connection>();
         static int N;
         static public double[,] w;
         static double infinite = Double.PositiveInfinity;
@@ -83,7 +83,7 @@ namespace AutoBusCalc
             else Console.WriteLine("Wrong starting time entered");
             Console.ReadLine();
         }
-        
+
 
         static bool Initialize()
         {
@@ -105,7 +105,7 @@ namespace AutoBusCalc
         static void ConvertConnsToArr()
         {
             w = new double[StationCount, StationCount];
-            for(int i = 0; i<StationCount; i++)
+            for (int i = 0; i < StationCount; i++)
                 for (int j = 0; j < StationCount; j++)
                     w[i, j] = infinite;
             foreach (Connection tc in allConnections)
@@ -123,6 +123,12 @@ namespace AutoBusCalc
                 Console.WriteLine();
             }
         }
+        /*static Path getMultiPath(Path input)
+        {
+            Path rezult = null;
+
+            return rezult;
+        }*/
         static void Main(string[] args)
         {
             if (Initialize())
@@ -173,16 +179,26 @@ namespace AutoBusCalc
             dixtra(start);
             CalcPath(start, finish);
             //for (int j = 0; j < counter; j++)//с этим уходит в бесконечный цикл иногда
-                for (int i = 0; i <= Paths[0].Length - 2; i++)
-                {
-                    Paths[0].DeleteConnection(i);
-                    dixtra(start);
-                    CalcPath(start, finish);
-                    Paths[0].RestoreConnection();
-                }
+            for (int i = 0; i <= Paths[0].Length - 2; i++)
+            {
+                Paths[0].DeleteConnection(i);
+                dixtra(start);
+                CalcPath(start, finish);
+                Paths[0].RestoreConnection();
+            }
             getCheapestPath();
             getFastestPath();
         }
+        /*static Connection getNthConnection(int stA, int stB, int n)
+        {
+            int counter = 0;
+            foreach (Connection con in allConnections)
+            {
+                if (con.StationA == stA && con.StationB == stB) counter++;
+                if (counter == n) return con;
+            }
+            return null;
+        }*/
 
         static MyTime getPathTime(Path input)
         {
@@ -193,28 +209,29 @@ namespace AutoBusCalc
             Bus between = getBusBetwenTwo(first, second, out minutes);//первый автобус, который нужен    
             MyTime now = new MyTime() { hour = startingtime.Hour, minute = startingtime.Minute };
             waitingforbus(getStationByNum(first + 1), between, start, out now);
-            //Console.WriteLine($" time betwen {first+1} and {second+1} = {minutes}");
+            //Console.WriteLine($" time betwen {first + 1} and {second + 1} = {minutes}");
+            //Console.WriteLine($"Transfer from {first + 1} to {second + 1} on {between.Name} for {minutes} minutes");
             now = now.addMinutes(minutes);
-            //Console.WriteLine($"Transfer from {first+1} to {second+1} is done");
+            //Console.WriteLine($"Transfer from {first + 1} to {second + 1} is done");
             Bus previous = between;
-            for (int i = input.Length-2; i>=1; i--)
+            for (int i = input.Length - 2; i >= 1; i--)
             {
                 first = input[i].Number;
                 second = input[i - 1].Number;
                 minutes = 0;
                 between = getBusBetwenTwo(first, second, out minutes);
-                //Console.WriteLine($"Trying transfer from {first+1} to {second+1} on {between.Name}" +
-                //    $" previous = {previous.Name}");
-                if(between!=previous)
+                //Console.WriteLine($"Transfer from {first + 1} to {second + 1} on {between.Name} for {minutes} minutes");
+                   //$" previous = {previous.Name}");
+                if (between != previous)
                 {
-                //    Console.WriteLine($"New bus!");
+                    //Console.WriteLine($"New bus!");
                     waitingforbus(getStationByNum(first + 1), between, (MyTime)now.Clone(), out now);
-                    now = now.addMinutes(getMinutesBetweenTwo(first+1, second+1));
+                    now = now.addMinutes(getMinutesBetweenTwo(first + 1, second + 1));
                 }
                 else
                 {
-                    now = now.addMinutes(getMinutesBetweenTwo(first+1,second+1));
-                    //Console.WriteLine($"Just going next from {first+1} to {second+1} now: {now.getString()}");
+                    now = now.addMinutes(getMinutesBetweenTwo(first + 1, second + 1));
+                    //Console.WriteLine($"Just going next from {first + 1} to {second + 1} now: {now.getString()}");
                 }
                 previous = between;
             }
@@ -224,13 +241,17 @@ namespace AutoBusCalc
         { //возвращает в rezult время прибытия автобуса 
             //Console.WriteLine($"Begin wait on {where.num} for {targetbus.Name}. Now: {now.getString()}:");
             rezult = (MyTime)now.Clone();
-            Station temp = targetbus.getFirstStation();            
+            Station temp = targetbus.getFirstStation();
             MyTime busstart = new MyTime() { hour = targetbus.start.Hour, minute = targetbus.start.Minute };
             rezult = (MyTime)busstart.Clone();
             //Console.WriteLine($"first station: {temp.num} Busstart: {rezult.getString()} WHERE: {where.num}");
-            if (where.num == temp.num)
+            if (where.num == temp.num&&now.gettotal()<=busstart.gettotal())
             {
                 //rezult = now;
+                
+            }
+            else if(where.num == temp.num)
+            {
                 while (true)
                 {
                     //Console.WriteLine("waitingfrobus");
@@ -252,7 +273,7 @@ namespace AutoBusCalc
                         temp = getNextStation(temp, targetbus, out minutes);
                         rezult = rezult.addMinutes(minutes);
                         //Console.WriteLine($"Transmissed to {temp.num}. rezult: {rezult.getString()}");
-                        if (temp.num == where.num && rezult.gettotal() >= now.gettotal()) break;                        
+                        if (temp.num == where.num && rezult.gettotal() >= now.gettotal()) break;
                     }
                 }
                 else
@@ -283,9 +304,10 @@ namespace AutoBusCalc
             {
                 rez = Paths[0];
                 MyTime pathrezult = rezrezult;
-                if (pathrezult.gettotal() >= 24 * 60) Console.WriteLine($"[!] There are only one path from {rez[rez.Length - 1].Number+1} to {rez[0].Number+1} and it is too late. Wasted time: {(rezrezult - fromhome).getString()}. Way complete at {rezrezult.getString()}");
+                //Console.WriteLine(rezrezult.getString() + " " + fromhome.getString());
+                if (pathrezult.gettotal() >= 24 * 60) Console.WriteLine($"[!] There are only one path from {rez[rez.Length - 1].Number + 1} to {rez[0].Number + 1} and it is too late. Wasted time: {(rezrezult - fromhome).getString()}. Way complete at {rezrezult.getString()}");
                 else
-                Console.WriteLine($"[!] There are only one path from {rez[rez.Length-1].Number+1} to {rez[0].Number+1}, wasted time: {(rezrezult - fromhome).getString()}. Way complete at {rezrezult.getString()}");
+                    Console.WriteLine($"[!] There are only one path from {rez[rez.Length - 1].Number + 1} to {rez[0].Number + 1}, wasted time: {(rezrezult - fromhome).getString()}. Way complete at {rezrezult.getString()}");
                 Paths[rezid].printRev();
             }
             else
@@ -296,7 +318,7 @@ namespace AutoBusCalc
                     //Console.WriteLine($" [ ] Checking {j + 1}");
                     MyTime pathrezult = getPathTime(Paths[j]);
                     if (pathrezult.gettotal() >= 24 * 60) Console.WriteLine($" [ ] Too late for Path {j + 1}, wasted time: {(pathrezult - fromhome).getString()}. Way complete at {pathrezult.getString()}");
-                    else if(pathrezult!=null)
+                    else if (pathrezult != null)
                     {
                         //rezrezult = getPathTime(rez);
 
@@ -318,10 +340,11 @@ namespace AutoBusCalc
         }
         static int getMinutesBetweenTwo(int a, int b)
         {
+            int rezult = 1000;
             foreach (Connection tc in allConnections)
-                if (tc.StationA == a && tc.StationB == b) return tc.time;
-            Console.WriteLine($"Connection betwen {a} and {b} not founded!");
-            return 1111;
+                if (tc.StationA == a && tc.StationB == b&& tc.time<rezult) rezult = tc.time;
+            if(rezult == 1000) Console.WriteLine($"Connection betwen {a} and {b} not founded!");
+            return rezult;
         }
         static Path getCheapestPath()
         {
@@ -336,10 +359,10 @@ namespace AutoBusCalc
                 for (int i = Paths[j].Length - 1; i >= 1; i--)
                 {
                     Bus busBetwen = getBusBetwenTwo(Paths[j].data[i].Number, Paths[j].data[i - 1].Number);
-                    if (!PathBusses.Contains(busBetwen)&&(busBetwen!=null))
+                    if (!PathBusses.Contains(busBetwen) && (busBetwen != null))
                         PathBusses.Add(busBetwen);
                 }
-                Console.Write($" [ ] Path {j+1}: ");
+                Console.Write($" [ ] Path {j + 1}: ");
                 Paths[j].printRev();
                 Console.WriteLine($" [ ] Contains {PathBusses.Count} busses: ");
                 int sum = 0;
@@ -351,14 +374,16 @@ namespace AutoBusCalc
                 if (sum < minsum) { rezult = Paths[j]; minsum = sum; rezid = j; }
                 Console.WriteLine($" [ ] Total cost = {sum}");
             }
-            Console.WriteLine($"[!] The cheapest path is {rezid+1}\n [~] But the most cheapest way is to go for a walk");
+            Console.WriteLine($"[!] The cheapest path is {rezid + 1}\n [~] But the most cheapest way is to go for a walk");
             return rezult;
-        }        
+        }
         static void CalcPath(int start, int finish)
         {
             start -= 1;
             finish -= 1;
             Path temppath = new Path();
+            int localpathcounter = 0;
+            Path[] temppaths = new Path[10];
             List<Point> tempway = new List<Point>();
             Point previous = new Point(finish, null);
             for (int i = 0; i < N; i++)
@@ -376,6 +401,13 @@ namespace AutoBusCalc
             if (!In(temppath))
                 Paths[counter++] = temppath;
         }
+        static List<Connection> getListFromPoints(Point[] input)
+        {
+            List<Connection> rezult = new List<Connection>();
+            return rezult;
+        }
+        
+        
         static Bus getBusBetwenTwo(int stA, int stB)  //0-21 нужен
         {
             Bus rezult = null;
@@ -389,12 +421,12 @@ namespace AutoBusCalc
         static Bus getBusBetwenTwo(int stA, int stB, out int minutes)  //0-21 нужен
         {
             Bus rezult = null;
-            minutes = 0;
+            minutes = 1000;
             foreach (Connection tc in allConnections)
             {
-                if (tc.StationA == stA + 1 && tc.StationB == stB + 1) { minutes = tc.time; return tc.busBetwen; }
+                if (tc.StationA == stA + 1 && tc.StationB == stB + 1&&tc.time<=minutes) { minutes = tc.time; rezult = tc.busBetwen; }
             }
-            Console.WriteLine($"Cannot find connect between {stA + 1} and {stB + 1}");
+            if(rezult==null) Console.WriteLine($"Cannot find connect between {stA + 1} and {stB + 1}");
             return rezult;
         }
         public static Station getStationByNum(int n)

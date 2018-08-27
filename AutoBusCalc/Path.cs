@@ -13,12 +13,14 @@ namespace AutoBusCalc
         int buf1, buf2, buf3;
         internal Point[] data;
         internal List<Bus> buses;
+        //internal List<Connection> connections;
         public Path()
         {
             Length = 0;
             PathCount++;
             data = new Point[50];
             buses = new List<Bus>();
+            //connections = new List<Connection>();
         }
         public void print()
         {
@@ -29,6 +31,46 @@ namespace AutoBusCalc
         {
             for (int i = Length - 1; i >= 0; i--) Console.Write($"{data[i].Number + 1} ");
             Console.WriteLine();
+        }
+        /*public bool MultiPath()
+        {
+            bool rezult = false;
+            for (int i = Length-1; i >=1; i--)
+            {
+                int count = getConCount(data[i].Number+1,data[i-1].Number+1);
+
+                if (count > 0) { Console.WriteLine($"Multi connection founded {data[i].Number + 1} and {data[i].Number - 1}: {count} connections"); return true; }
+            }
+            return rezult;
+        }
+        public void fillConns()
+        {
+            for (int i = Length-1; i >=1; i--)
+            {
+                //int count = getConCount(data[i].Number + 1, data[i - 1].Number + 1);
+
+                connections.Add(GetConnection(data[i].Number, data[i - 1].Number,1));
+            }
+        }*/
+        Connection GetConnection(int stA, int stB, int n)
+        {
+            Connection rezult = null;
+            int counter = 0;
+            foreach(Connection a in Program.allConnections)
+            {
+                if (a.StationA == stA && a.StationB == stB) counter++;
+                if (counter == n) rezult = a;
+            }
+            return rezult;
+        }
+        int getConCount(int stA, int stB)
+        {
+            int rezult = 0;
+            foreach (Connection con in Program.allConnections)
+            {
+                if (con.StationA == stA && con.StationB == stB) rezult++;
+            }
+            return rezult;
         }
         internal Point this[int index]
         {
