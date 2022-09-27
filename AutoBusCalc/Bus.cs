@@ -44,6 +44,9 @@ namespace AutoBusCalc
         public void addBus(Bus a)
         {
             if (!connectedbusses.Contains(a)) connectedbusses.Add(a);
+            string str = @"
+            What is this tring literal?
+            ";
         }
         public Station getFirstStation()
         {

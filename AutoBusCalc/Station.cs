@@ -43,8 +43,9 @@ namespace AutoBusCalc
         }*/
         public void printBusses()
         {
-            foreach (Bus a in Busses)
+            foreach ( Bus a in Busses ) {
                 Console.Write(a.Name + ",");
+            }
         }
     }
 }
