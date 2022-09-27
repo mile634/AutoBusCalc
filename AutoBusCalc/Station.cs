@@ -44,7 +44,7 @@ namespace AutoBusCalc
         public void printBusses()
         {
             foreach ( Bus a in Busses ) {
-                Console.Write(a.Name + ",");    //qwe
+                Console.Write(a.Name + ",");    //qwe   eee
             }
         }
     }
